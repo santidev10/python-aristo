@@ -1,0 +1,29 @@
+from subprocess import PIPE, Popen
+import os, re, shutil, subprocess
+
+os.chdir("/mnt/efs")
+os.mkdir("Aristocrat-VLT")
+os.mkdir("Aristocrat-VLT/packages")
+os.mkdir("Aristocrat-VLT/bin")
+os.mkdir("disk")
+retail_dirs = []
+with Popen(["ls"], stdout=PIPE, bufsize=1, universal_newlines=True) as p:
+    for dir in p.stdout:
+        if re.search("^G2S.*DEV$", dir):
+            retail_dirs.append(dir.rstrip())
+    if retail_dirs:
+        os.chdir(str(retail_dirs[0]))
+        files_lis = os.listdir()
+        for file in files_lis:
+            if "RETAIL" in file:
+                print(file)
+                os.chdir(file)
+                print(os.listdir())
+                subprocess.run(["sudo", "mount", "-o", "loop", "ATI_Platform_2.7.0.8.iso", "/mnt/efs/disk"])
+                subprocess.Popen(["cp -dr /mnt/efs/disk/* /mnt/efs/Aristocrat-VLT/bin"], shell=True, stdout=subprocess.PIPE)
+        #subprocess.run(["sudo", "umount", "/mnt/efs/disk/"])
+        #subprocess.run(["rm", "-rf", "/mnt/efs/Aristocrat-VLT/", "/mnt/efs/disk/"])
+    else:
+        print("Error: no RETAIL directory found")
+
+        
